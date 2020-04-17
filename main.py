@@ -17,6 +17,13 @@ class Ui(QtWidgets.QMainWindow):
         self.findChild(QtWidgets.QPushButton, 'stop').clicked.connect(self.stopButtonClicked)
         self.findChild(QtWidgets.QSpinBox, 'delay').valueChanged.connect(self.updateDelay)
 
+        self.runButton = self.findChild(QtWidgets.QPushButton, 'run')
+        self.stepButton = self.findChild(QtWidgets.QPushButton, 'step')
+        self.stopButton = self.findChild(QtWidgets.QPushButton, 'stop')
+
+        self.runButton.clicked.connect(self.runButtonClicked)
+        self.stepButton.clicked.connect(self.stepButtonClicked)
+
         self.running = False
         self.programActive = False
 
@@ -26,56 +33,77 @@ class Ui(QtWidgets.QMainWindow):
         self.timer.start()
 
     def runButtonClicked(self):
-        if self.running:
-            self.findChild(QtWidgets.QPushButton, 'run').setText("Run")
-            self.running = False
-            if not self.programActive:
-                self.findChild(QtWidgets.QPushButton, 'stop').setEnabled(False)
+        self.runButton.clicked.disconnect()
+        self.runButton.setText("Pause")
+        self.runButton.clicked.connect(self.pauseButtonClicked)
 
-        else:
-            self.findChild(QtWidgets.QPushButton, 'run').setText("Pause")
-            self.findChild(QtWidgets.QPushButton, 'stop').setEnabled(True)
-            self.running = True
-            self.programActive = True
-            if self.programActive:
-                bfi.cleanup()
-                bfi.setProgram(self.findChild(QtWidgets.QPlainTextEdit, 'program').toPlainText())
-                self.findChild(QtWidgets.QPlainTextEdit, 'memory').setPlainText(str(bfi.memory))
+        self.running = True
+        self.stopButton.setEnabled(True)
 
-    def stepButtonClicked(self):
-        if bfi.programPointer < len(bfi.program) and not self.running and self.programActive:
-            if self.running:
-                self.findChild(QtWidgets.QPushButton, 'run').setText("Continue")
-                self.running = False
-            bfi.step()
-            self.findChild(QtWidgets.QPlainTextEdit, 'memory').setPlainText(str(bfi.memory))
-            if bfi.consoleOutput:
-                print(bfi.consoleContent)
-
-        elif not self.programActive:
+        if not self.programActive:
             bfi.cleanup()
             bfi.setProgram(self.findChild(QtWidgets.QPlainTextEdit, 'program').toPlainText())
             self.findChild(QtWidgets.QPlainTextEdit, 'memory').setPlainText(str(bfi.memory))
-            self.findChild(QtWidgets.QPushButton, 'stop').setEnabled(True)
-            self.programActive = True
+
+    def pauseButtonClicked(self):
+        self.runButton.clicked.disconnect()
+        self.runButton.setText("Continue")
+        self.runButton.clicked.connect(self.runButtonClicked)
+
+        self.running = True
+        self.programActive = True
+
+    def stepButtonClicked(self):
+
+        if not self.programActive:
+            bfi.cleanup()
+            bfi.setProgram(self.findChild(QtWidgets.QPlainTextEdit, 'program').toPlainText())
+            self.findChild(QtWidgets.QPlainTextEdit, 'memory').setPlainText(str(bfi.memory))
+            self.stopButton.setEnabled(True)
+            self.programActive(True)
+
+        self.running = False
+
+        if bfi.programPointer < len(bfi.program):
+            bfi.step()
+            if bfi.consoleOutput:
+                print(bfi.consoleContent)
+        else:
+            self.runButton.clicked.disconnect()
+            self.runButton.setText("Run")
+            self.runButton.clicked.connect(self.runButtonClicked)
+
+            self.stopButton.setEnabled(False)
+            self.running = False
+            self.programActive = False
 
     def stopButtonClicked(self):
-        self.findChild(QtWidgets.QPushButton, 'run').setText("Run")
-        self.findChild(QtWidgets.QPushButton, 'stop').setEnabled(False)
+        self.runButton.clicked.disconnect()
+        self.runButton.setText("Run")
+        self.runButton.clicked.connect(self.runButtonClicked)
+
         self.running = False
         self.programActive = False
-
-        self.findChild(QtWidgets.QPlainTextEdit, 'memory').setPlainText(str(bfi.memory))
+        bfi.needInput = False
+        self.stopButton.setEnabled(False)
+        self.stepButton.setEnabled(True)
+        self.runButton.setEnabled(True)
+        self.findChild(QtWidgets.QLineEdit, 'input').setEnabled(False)
+        # self.findChild(QtWidgets.QPlainTextEdit, 'memory').setPlainText(str(bfi.memory))
 
     def uiUpdate(self):
         if bfi.needInput:
             bfi.memory[bfi.memoryPointer] = self.handleInput()
         if self.running:
             if not bfi.programPointer < len(bfi.program):
+                self.runButton.clicked.disconnect()
+                self.runButton.setText("Run")
+                self.runButton.clicked.connect(self.runButtonClicked)
+
+                self.stopButton.setEnabled(False)
                 self.running = False
                 self.programActive = False
-                self.findChild(QtWidgets.QPushButton, 'run').setText("Run")
-                self.findChild(QtWidgets.QPushButton, 'stop').setEnabled(False)
+
             else:
                 bfi.step()
 
@@ -88,23 +116,31 @@ class Ui(QtWidgets.QMainWindow):
         self.timer.setInterval(self.findChild(QtWidgets.QSpinBox, 'delay').value())
 
     def handleInput(self):
-        # self.timer.stop()
-        self.running = False
-        self.findChild(QtWidgets.QPushButton, 'run').setText("Continue")
+
+        self.runButton.clicked.disconnect()
+        self.runButton.setText("Continue")
+        self.runButton.clicked.connect(self.runButtonClicked)
+
+        self.stepButton.setEnabled(False)
+        self.runButton.setEnabled(False)
+        self.findChild(QtWidgets.QLineEdit, 'input').setEnabled(True)
         while True:
             try:
                 value = ord(self.findChild(QtWidgets.QLineEdit, 'input').text())
             except:
                 pass
             else:
+                self.findChild(QtWidgets.QLineEdit, 'input').setText("")
+                self.findChild(QtWidgets.QLineEdit, 'input').setEnabled(False)
+                self.stepButton.setEnabled(True)
+                self.runButton.setEnabled(True)
+                bfi.needInput = False
                 break
             app.processEvents()
-        # self.timer.start()
-        # self.findChild(QtWidgets.QLineEdit, 'input').setText("")
-        self.running = True
         return value
 
 
 app = QtWidgets.QApplication(sys.argv)
 window = Ui()
 app.exec_()
+#input("press enter to exit")
