@@ -1,6 +1,3 @@
-from PyQt5.QtCore import pyqtSignal,QObject
-
-
 class programRunner:
     memoryPointer = 0
     programPointer = 0
@@ -17,7 +14,7 @@ class programRunner:
         self.output = ""
         self.needInput = False
 
-        #fill the memory
+        # fill the memory
         if len(self.memory) == 0:
             for x in range(self.memorySize):
                 self.memory.append(0)
@@ -25,7 +22,6 @@ class programRunner:
             if len(self.memory) <= self.memorySize:
                 for x in range(self.memorySize - len(self.memory)):
                     self.memory.append(0)
-
 
     def step(self):
         instruction = self.program[self.programPointer]
@@ -86,9 +82,8 @@ class programRunner:
         self.needInput = False
         self.memory = []
 
-
         for x in range(self.memorySize):
             self.memory.append(0)
 
-    def setProgram(self,prog):
+    def setProgram(self, prog):
         self.program = ''.join(filter(lambda x: x in ['.', ',', '[', ']', '<', '>', '+', '-'], prog))

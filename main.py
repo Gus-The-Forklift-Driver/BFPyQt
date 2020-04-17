@@ -1,8 +1,8 @@
-from BFI import programRunner
-from PyQt5 import QtWidgets, uic, QtCore
 import sys
-from time import sleep
 
+from PyQt5 import QtWidgets, uic, QtCore
+
+from BFI import programRunner
 
 bfi = programRunner(consoleOutput=True, memoryRollover=False)
 
@@ -12,10 +12,10 @@ class Ui(QtWidgets.QMainWindow):
         super(Ui, self).__init__()
         uic.loadUi('v1.ui', self)
         self.show()
-        self.findChild(QtWidgets.QPushButton,'run').clicked.connect(self.runButtonClicked)
-        self.findChild(QtWidgets.QPushButton,'step').clicked.connect(self.stepButtonClicked)
-        self.findChild(QtWidgets.QPushButton,'stop').clicked.connect(self.stopButtonClicked)
-        self.findChild(QtWidgets.QSpinBox,'delay').valueChanged.connect(self.updateDelay)
+        self.findChild(QtWidgets.QPushButton, 'run').clicked.connect(self.runButtonClicked)
+        self.findChild(QtWidgets.QPushButton, 'step').clicked.connect(self.stepButtonClicked)
+        self.findChild(QtWidgets.QPushButton, 'stop').clicked.connect(self.stopButtonClicked)
+        self.findChild(QtWidgets.QSpinBox, 'delay').valueChanged.connect(self.updateDelay)
 
         self.running = False
         self.programActive = False
@@ -26,7 +26,7 @@ class Ui(QtWidgets.QMainWindow):
         self.timer.start()
 
     def runButtonClicked(self):
-        if self.running :
+        if self.running:
             self.findChild(QtWidgets.QPushButton, 'run').setText("Run")
             self.running = False
             if not self.programActive:
@@ -61,7 +61,7 @@ class Ui(QtWidgets.QMainWindow):
 
     def stopButtonClicked(self):
         self.findChild(QtWidgets.QPushButton, 'run').setText("Run")
-        self.findChild(QtWidgets.QPushButton,'stop').setEnabled(False)
+        self.findChild(QtWidgets.QPushButton, 'stop').setEnabled(False)
         self.running = False
         self.programActive = False
 
@@ -75,12 +75,12 @@ class Ui(QtWidgets.QMainWindow):
                 self.running = False
                 self.programActive = False
                 self.findChild(QtWidgets.QPushButton, 'run').setText("Run")
-                self.findChild(QtWidgets.QPushButton,'stop').setEnabled(False)
+                self.findChild(QtWidgets.QPushButton, 'stop').setEnabled(False)
             else:
                 bfi.step()
 
                 self.findChild(QtWidgets.QPlainTextEdit, 'memory').setPlainText(str(bfi.memory))
-                self.findChild(QtWidgets.QLabel,'output').setText(bfi.output)
+                self.findChild(QtWidgets.QLabel, 'output').setText(bfi.output)
                 if bfi.consoleOutput:
                     print(bfi.consoleContent)
 
@@ -88,22 +88,21 @@ class Ui(QtWidgets.QMainWindow):
         self.timer.setInterval(self.findChild(QtWidgets.QSpinBox, 'delay').value())
 
     def handleInput(self):
-        #self.timer.stop()
+        # self.timer.stop()
         self.running = False
         self.findChild(QtWidgets.QPushButton, 'run').setText("Continue")
         while True:
             try:
-                value = ord(self.findChild(QtWidgets.QLineEdit,'input').text())
+                value = ord(self.findChild(QtWidgets.QLineEdit, 'input').text())
             except:
                 pass
             else:
                 break
             app.processEvents()
-        #self.timer.start()
-        #self.findChild(QtWidgets.QLineEdit, 'input').setText("")
-        self.running =True
+        # self.timer.start()
+        # self.findChild(QtWidgets.QLineEdit, 'input').setText("")
+        self.running = True
         return value
-
 
 
 app = QtWidgets.QApplication(sys.argv)
