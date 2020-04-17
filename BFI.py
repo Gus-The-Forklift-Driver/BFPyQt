@@ -87,8 +87,6 @@ class programRunner:
         self.memory = []
 
 
-
-
         for x in range(self.memorySize):
             self.memory.append(0)
 
